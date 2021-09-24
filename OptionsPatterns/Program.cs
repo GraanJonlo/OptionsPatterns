@@ -24,7 +24,27 @@ namespace OptionsPatterns
 					services.Configure<WorkerOptions>(configuration.GetSection(nameof(WorkerOptions)));
 
 					services.AddHostedService<Worker>();
+					services.AddHostedService<DynamicWorker>();
 				});
+		}
+	}
+
+	public class DynamicWorker : BackgroundService
+	{
+		private readonly IOptionsMonitor<WorkerOptions> _options;
+
+		public DynamicWorker(IOptionsMonitor<WorkerOptions> options)
+		{
+			_options = options;
+		}
+
+		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+		{
+			while (!stoppingToken.IsCancellationRequested)
+			{
+				Console.WriteLine($"Dynamic worker running at: {DateTimeOffset.Now}");
+				await Task.Delay(_options.CurrentValue.Delay, stoppingToken);
+			}
 		}
 	}
 
